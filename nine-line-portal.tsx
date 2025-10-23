@@ -4,8 +4,8 @@ import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Globe, Lock, Mail, 
 
 // Supabase configuration
 const supabase = createClient(
-  'https://qredqlzgqxirxndpixhz.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyZWRxbHpncXhpcnhuZHBpeGh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3Njk0NzIsImV4cCI6MjA2NTM0NTQ3Mn0.dgaYPcBpeOTJK369sNFGmRvdpFHOCNGPfWLiUHIrNTA'
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 interface Profile {

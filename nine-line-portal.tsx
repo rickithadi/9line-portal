@@ -80,6 +80,7 @@ const NineLinePortal = () => {
 
   // Load user profile
   const loadProfile = async (userId: string) => {
+    console.log('Loading profile for user:', userId);
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -88,7 +89,36 @@ const NineLinePortal = () => {
 
     if (error) {
       console.error('Error loading profile:', error);
+      // If profile doesn't exist, try to create it
+      if (error.code === 'PGRST116') {
+        console.log('Profile not found, attempting to create one...');
+        const { data: session } = await supabase.auth.getSession();
+        if (session?.session?.user) {
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: session.session.user.email,
+              name: session.session.user.user_metadata?.name || session.session.user.email,
+              company: session.session.user.user_metadata?.company || null,
+            })
+            .select()
+            .single();
+          
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            setError(`Failed to create user profile: ${createError.message}`);
+          } else {
+            console.log('Profile created successfully:', newProfile);
+            setProfile(newProfile);
+            loadWebsites(userId);
+          }
+        }
+      } else {
+        setError(`Failed to load profile: ${error.message}`);
+      }
     } else {
+      console.log('Profile loaded successfully:', data);
       setProfile(data);
       loadWebsites(userId);
     }
@@ -96,19 +126,42 @@ const NineLinePortal = () => {
 
   // Load user websites with all related data
   const loadWebsites = async (userId: string) => {
+    console.log('Loading websites for user:', userId);
     setLoading(true);
     
-    // Get websites using the view
-    const { data: websiteData, error: websiteError } = await supabase
+    // Try to get websites using the view first, fallback to direct table access
+    let websiteData;
+    let websiteError;
+    
+    // First try the optimized view
+    const viewResult = await supabase
       .from('website_stats')
       .select('*')
       .eq('user_id', userId);
+    
+    if (viewResult.error && viewResult.error.code === '42P01') {
+      console.log('website_stats view not found, using direct table access...');
+      // View doesn't exist, use direct table access
+      const { data: directData, error: directError } = await supabase
+        .from('websites')
+        .select('*')
+        .eq('user_id', userId);
+      
+      websiteData = directData;
+      websiteError = directError;
+    } else {
+      websiteData = viewResult.data;
+      websiteError = viewResult.error;
+    }
 
     if (websiteError) {
       console.error('Error loading websites:', websiteError);
+      setError(`Failed to load websites: ${websiteError.message}`);
       setLoading(false);
       return;
     }
+
+    console.log('Websites loaded successfully:', websiteData);
 
     // Get monitoring locations for all websites
     const websiteIds = websiteData?.map(w => w.id) || [];
@@ -209,72 +262,110 @@ const NineLinePortal = () => {
     setError('');
     setAuthLoading(true);
 
-    if (!session?.user?.id) {
-      setError('User not authenticated');
-      setAuthLoading(false);
-      return;
-    }
+    try {
+      console.log('Starting website addition process...');
+      
+      if (!session?.user?.id) {
+        setError('User not authenticated');
+        setAuthLoading(false);
+        return;
+      }
 
-    if (!newWebsiteDomain.trim()) {
-      setError('Please enter a domain name');
-      setAuthLoading(false);
-      return;
-    }
+      if (!newWebsiteDomain.trim()) {
+        setError('Please enter a domain name');
+        setAuthLoading(false);
+        return;
+      }
 
-    // Insert website
-    const { data: websiteData, error: websiteError } = await supabase
-      .from('websites')
-      .insert({
-        user_id: session.user.id,
-        domain: newWebsiteDomain,
-        status: 'online',
-        uptime: 100,
-        avg_load_time: 0,
-      })
-      .select()
-      .single();
+      console.log('Inserting website:', { user_id: session.user.id, domain: newWebsiteDomain });
+      
+      // Insert website
+      const { data: websiteData, error: websiteError } = await supabase
+        .from('websites')
+        .insert({
+          user_id: session.user.id,
+          domain: newWebsiteDomain,
+          status: 'online',
+          uptime: 100,
+          avg_load_time: 0,
+        })
+        .select()
+        .single();
 
-    if (websiteError) {
-      setError(websiteError.message);
-      setAuthLoading(false);
-      return;
-    }
+      if (websiteError) {
+        console.error('Website insert error:', websiteError);
+        setError(`Failed to add website: ${websiteError.message}`);
+        setAuthLoading(false);
+        return;
+      }
 
-    // Insert initial performance metrics
-    await supabase.from('performance_metrics').insert({
-      website_id: websiteData.id,
-      lcp: 2.1,
-      fid: 50,
-      cls: 0.05,
-    });
+      console.log('Website inserted successfully:', websiteData);
 
-    // Insert security metrics
-    await supabase.from('security_metrics').insert({
-      website_id: websiteData.id,
-      ssl_valid: true,
-      vulnerabilities: 0,
-    });
-
-    // Insert default monitoring locations
-    const defaultLocations = [
-      { location: 'US-East', frequency: '1 minute' },
-      { location: 'US-West', frequency: '1 minute' },
-      { location: 'EU-West', frequency: '1 minute' },
-      { location: 'Asia-Pacific', frequency: '1 minute' },
-    ];
-
-    await supabase.from('monitoring_locations').insert(
-      defaultLocations.map(loc => ({
+      // Insert initial performance metrics
+      console.log('Inserting performance metrics...');
+      const { error: perfError } = await supabase.from('performance_metrics').insert({
         website_id: websiteData.id,
-        ...loc,
-      }))
-    );
+        lcp: 2.1,
+        fid: 50,
+        cls: 0.05,
+      });
 
-    setNewWebsiteDomain('');
-    setShowAddWebsite(false);
-    setSuccess('Website added successfully!');
-    loadWebsites(session.user.id);
-    setAuthLoading(false);
+      if (perfError) {
+        console.error('Performance metrics error:', perfError);
+        setError(`Failed to add performance metrics: ${perfError.message}`);
+        setAuthLoading(false);
+        return;
+      }
+
+      // Insert security metrics
+      console.log('Inserting security metrics...');
+      const { error: secError } = await supabase.from('security_metrics').insert({
+        website_id: websiteData.id,
+        ssl_valid: true,
+        vulnerabilities: 0,
+      });
+
+      if (secError) {
+        console.error('Security metrics error:', secError);
+        setError(`Failed to add security metrics: ${secError.message}`);
+        setAuthLoading(false);
+        return;
+      }
+
+      // Insert default monitoring locations
+      console.log('Inserting monitoring locations...');
+      const defaultLocations = [
+        { location: 'US-East', frequency: '1 minute' },
+        { location: 'US-West', frequency: '1 minute' },
+        { location: 'EU-West', frequency: '1 minute' },
+        { location: 'Asia-Pacific', frequency: '1 minute' },
+      ];
+
+      const { error: locError } = await supabase.from('monitoring_locations').insert(
+        defaultLocations.map(loc => ({
+          website_id: websiteData.id,
+          ...loc,
+        }))
+      );
+
+      if (locError) {
+        console.error('Monitoring locations error:', locError);
+        setError(`Failed to add monitoring locations: ${locError.message}`);
+        setAuthLoading(false);
+        return;
+      }
+
+      console.log('Website addition completed successfully!');
+      setNewWebsiteDomain('');
+      setShowAddWebsite(false);
+      setSuccess('Website added successfully!');
+      loadWebsites(session.user.id);
+      setAuthLoading(false);
+    } catch (error) {
+      console.error('Unexpected error in handleAddWebsite:', error);
+      setError(`Unexpected error: ${error.message || 'Unknown error occurred'}`);
+      setAuthLoading(false);
+    }
   };
 
   const getStatusColor = (status: string) => {

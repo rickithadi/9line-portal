@@ -363,7 +363,7 @@ const NineLinePortal = () => {
       setAuthLoading(false);
     } catch (error) {
       console.error('Unexpected error in handleAddWebsite:', error);
-      setError(`Unexpected error: ${error.message || 'Unknown error occurred'}`);
+      setError(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
       setAuthLoading(false);
     }
   };

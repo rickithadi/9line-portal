@@ -369,7 +369,7 @@ const NineLinePortal = () => {
   };
 
   const getStatusColor = (status: string) => {
-    return status === 'online' ? 'bg-green-500' : status === 'warning' ? 'bg-yellow-500' : 'bg-red-500';
+    return status === 'online' ? 'status-online' : status === 'warning' ? 'status-warning' : 'status-offline';
   };
 
   const getPerformanceScore = (lcp?: number, fid?: number, cls?: number) => {
@@ -407,9 +407,9 @@ const NineLinePortal = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
         <div className="text-center">
-          <Loader className="animate-spin h-8 w-8 text-gray-900 mx-auto mb-4" />
+          <Loader className="animate-spin h-8 w-8 text-brand mx-auto mb-4" />
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -419,17 +419,17 @@ const NineLinePortal = () => {
   // Authentication screens
   if (!session) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-light text-gray-900 mb-2">Nine-Line.dev</h1>
-            <div className="h-px w-24 bg-gray-300 mx-auto mb-2"></div>
+            <h1 className="text-4xl font-light text-brand mb-2">Nine-Line.dev</h1>
+            <div className="h-px w-24 bg-gradient-brand mx-auto mb-2"></div>
             <p className="text-sm text-gray-600">Customer Portal</p>
           </div>
 
           {/* Auth Card */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="card p-8 shadow-xl">
             {/* Toggle between Login and Signup */}
             <div className="flex border-b border-gray-200 mb-6">
               <button
@@ -440,7 +440,7 @@ const NineLinePortal = () => {
                 }}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   showLogin
-                    ? 'text-gray-900 border-b-2 border-gray-900'
+                    ? 'text-brand border-b-2 border-brand'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -454,7 +454,7 @@ const NineLinePortal = () => {
                 }}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   !showLogin
-                    ? 'text-gray-900 border-b-2 border-gray-900'
+                    ? 'text-brand border-b-2 border-brand'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -524,7 +524,7 @@ const NineLinePortal = () => {
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="w-full bg-gray-900 text-white py-2 rounded hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {authLoading && <Loader className="animate-spin" size={16} />}
                   {authLoading ? 'Logging in...' : 'Login'}
@@ -540,7 +540,7 @@ const NineLinePortal = () => {
                     type="text"
                     value={signupName}
                     onChange={(e) => setSignupName(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="input w-full"
                     placeholder="John Doe"
                     required
                     disabled={authLoading}
@@ -557,7 +557,7 @@ const NineLinePortal = () => {
                       type="email"
                       value={signupEmail}
                       onChange={(e) => setSignupEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      className="input w-full pl-10 pr-4"
                       placeholder="you@company.com"
                       required
                       disabled={authLoading}
@@ -573,7 +573,7 @@ const NineLinePortal = () => {
                     type="text"
                     value={signupCompany}
                     onChange={(e) => setSignupCompany(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="input w-full"
                     placeholder="Acme Inc."
                     disabled={authLoading}
                   />
@@ -589,7 +589,7 @@ const NineLinePortal = () => {
                       type={showPassword ? 'text' : 'password'}
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
-                      className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      className="input w-full pl-10 pr-10"
                       placeholder="••••••••"
                       required
                       disabled={authLoading}
@@ -609,7 +609,7 @@ const NineLinePortal = () => {
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="w-full bg-gray-900 text-white py-2 rounded hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {authLoading && <Loader className="animate-spin" size={16} />}
                   {authLoading ? 'Creating Account...' : 'Create Account'}
@@ -624,14 +624,14 @@ const NineLinePortal = () => {
 
   // Dashboard
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-8">
               <div>
-                <h1 className="text-2xl font-light text-gray-900">Nine-Line.dev</h1>
+                <h1 className="text-2xl font-light text-brand">Nine-Line.dev</h1>
                 <div className="text-xs text-gray-500">Customer Portal</div>
               </div>
             </div>
@@ -667,56 +667,56 @@ const NineLinePortal = () => {
 
         {/* Overview Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="card p-6">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm text-gray-600">Total Sites</div>
               <Globe className="text-gray-400" size={20} />
             </div>
-            <div className="text-3xl font-light text-gray-900">{websites.length}</div>
+            <div className="text-3xl font-light text-brand">{websites.length}</div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="card p-6">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm text-gray-600">Avg Uptime</div>
-              <Activity className="text-green-500" size={20} />
+              <Activity className="text-green-600" size={20} />
             </div>
-            <div className="text-3xl font-light text-gray-900">
+            <div className="text-3xl font-light text-brand">
               {websites.length > 0
                 ? (websites.reduce((acc, site) => acc + site.uptime, 0) / websites.length).toFixed(2)
                 : '0.00'}%
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="card p-6">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm text-gray-600">Avg Load Time</div>
-              <Zap className="text-blue-500" size={20} />
+              <Zap className="text-blue-600" size={20} />
             </div>
-            <div className="text-3xl font-light text-gray-900">
+            <div className="text-3xl font-light text-brand">
               {websites.length > 0
                 ? (websites.reduce((acc, site) => acc + site.avg_load_time, 0) / websites.length).toFixed(1)
                 : '0.0'}s
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="card p-6">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm text-gray-600">Security Issues</div>
-              <Shield className="text-orange-500" size={20} />
+              <Shield className="text-orange-600" size={20} />
             </div>
-            <div className="text-3xl font-light text-gray-900">
+            <div className="text-3xl font-light text-brand">
               {websites.reduce((acc, site) => acc + (site.vulnerabilities || 0), 0)}
             </div>
           </div>
         </div>
 
         {/* Websites List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="card">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-900">Monitored Websites</h2>
             <button 
               onClick={() => setShowAddWebsite(true)}
-              className="flex items-center space-x-2 px-4 py-2 text-sm bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors"
+              className="btn-primary flex items-center space-x-2 text-sm"
             >
               <Plus size={16} />
               <span>Add Website</span>
@@ -730,7 +730,7 @@ const NineLinePortal = () => {
               <p className="text-gray-600 mb-6">Get started by adding your first website to monitor</p>
               <button 
                 onClick={() => setShowAddWebsite(true)}
-                className="inline-flex items-center space-x-2 px-4 py-2 text-sm bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors"
+                className="btn-primary inline-flex items-center space-x-2 text-sm"
               >
                 <Plus size={16} />
                 <span>Add Your First Website</span>
@@ -935,7 +935,7 @@ const NineLinePortal = () => {
       {/* Add Website Modal */}
       {showAddWebsite && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="card max-w-md w-full p-6 shadow-xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium text-gray-900">Add New Website</h3>
               <button
@@ -966,7 +966,7 @@ const NineLinePortal = () => {
                   type="text"
                   value={newWebsiteDomain}
                   onChange={(e) => setNewWebsiteDomain(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="input w-full"
                   placeholder="example.com"
                   required
                   disabled={authLoading}
@@ -982,7 +982,7 @@ const NineLinePortal = () => {
                     setNewWebsiteDomain('');
                     setError('');
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="btn-secondary flex-1"
                   disabled={authLoading}
                 >
                   Cancel
@@ -990,7 +990,7 @@ const NineLinePortal = () => {
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="flex-1 px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {authLoading && <Loader className="animate-spin" size={16} />}
                   {authLoading ? 'Adding...' : 'Add Website'}

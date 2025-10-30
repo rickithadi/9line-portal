@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Globe, Lock, Mail, Eye, EyeOff, LogOut, Plus, Activity, Shield, Zap, Loader, X, MessageSquare } from 'lucide-react';
-// import PipedreamConnect from './components/PipedreamConnect';
+import PipedreamConnect from './components/PipedreamConnect';
 import MCPChat from './components/MCPChat';
 
 // Supabase configuration
@@ -736,7 +736,7 @@ const NineLinePortal = () => {
         </div>
 
         {/* Pipedream Connect Integration */}
-        {/* {profile && (
+        {profile && (
           <PipedreamConnect
             externalUserId={profile.id}
             onAccountConnected={(accountId, accountName, appSlug) => {
@@ -747,7 +747,7 @@ const NineLinePortal = () => {
             }}
             className="mb-6"
           />
-        )} */}
+        )}
 
         {/* Websites List */}
         <div className="card">

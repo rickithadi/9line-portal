@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Globe, Lock, Mail, Eye, EyeOff, LogOut, Plus, Activity, Shield, Zap, Loader, X } from 'lucide-react';
+import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Globe, Lock, Mail, Eye, EyeOff, LogOut, Plus, Activity, Shield, Zap, Loader, X, MessageSquare } from 'lucide-react';
+// import PipedreamConnect from './components/PipedreamConnect';
+import MCPChat from './components/MCPChat';
 
 // Supabase configuration
 const supabase = createClient(
@@ -50,6 +52,7 @@ const NineLinePortal = () => {
   const [signupCompany, setSignupCompany] = useState('');
   const [newWebsiteDomain, setNewWebsiteDomain] = useState('');
   const [error, setError] = useState('');
+  const [showMCPChat, setShowMCPChat] = useState(false);
   const [success, setSuccess] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
@@ -637,6 +640,17 @@ const NineLinePortal = () => {
             </div>
             
             <div className="flex items-center space-x-6">
+              <button
+                onClick={() => setShowMCPChat(!showMCPChat)}
+                className={`flex items-center space-x-2 px-4 py-2 text-sm rounded transition-colors ${
+                  showMCPChat 
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <MessageSquare size={16} />
+                <span>AI Chat</span>
+              </button>
               <div className="text-right">
                 <div className="text-sm font-medium text-gray-900">{profile?.name}</div>
                 <div className="text-xs text-gray-500">{profile?.company || profile?.email}</div>
@@ -653,8 +667,19 @@ const NineLinePortal = () => {
         </div>
       </header>
 
+      {/* MCP Chat Panel */}
+      {showMCPChat && profile && (
+        <div className="fixed top-0 right-0 w-96 h-screen bg-white shadow-xl z-50 border-l">
+          <MCPChat
+            externalUserId={profile.id}
+            onClose={() => setShowMCPChat(false)}
+            className="h-full"
+          />
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all duration-300 ${showMCPChat ? 'mr-96' : ''}`}>
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
             <CheckCircle size={16} />
@@ -709,6 +734,20 @@ const NineLinePortal = () => {
             </div>
           </div>
         </div>
+
+        {/* Pipedream Connect Integration */}
+        {/* {profile && (
+          <PipedreamConnect
+            externalUserId={profile.id}
+            onAccountConnected={(accountId, accountName, appSlug) => {
+              console.log('Account connected:', { accountId, accountName, appSlug });
+            }}
+            onError={(error) => {
+              console.error('Pipedream Connect error:', error);
+            }}
+            className="mb-6"
+          />
+        )} */}
 
         {/* Websites List */}
         <div className="card">

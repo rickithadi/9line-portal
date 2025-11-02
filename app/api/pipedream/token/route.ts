@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 // import { PipedreamClient } from '@pipedream/sdk';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // Only initialize client if environment variables are provided
 // let client: PipedreamClient | null = null;
 

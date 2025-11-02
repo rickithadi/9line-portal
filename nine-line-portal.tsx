@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Globe, Lock, Mail, Eye, EyeOff, LogOut, Plus, Activity, Shield, Zap, Loader, X, MessageSquare } from 'lucide-react';
+import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Globe, Lock, Mail, Eye, EyeOff, LogOut, Plus, Activity, Shield, Zap, Loader, X, MessageSquare, User, Settings, CreditCard } from 'lucide-react';
 // import PipedreamConnect from './components/PipedreamConnect';
 import MCPChat from './components/MCPChat';
 
@@ -15,6 +15,9 @@ interface Profile {
   email: string;
   name: string;
   company: string | null;
+  subscription_status?: string;
+  subscription_plan?: string;
+  next_billing_date?: string;
 }
 
 interface Website {
@@ -53,6 +56,8 @@ const NineLinePortal = () => {
   const [newWebsiteDomain, setNewWebsiteDomain] = useState('');
   const [error, setError] = useState('');
   const [showMCPChat, setShowMCPChat] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [activeProfileTab, setActiveProfileTab] = useState<'profile' | 'billing'>('profile');
   const [success, setSuccess] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
@@ -371,6 +376,37 @@ const NineLinePortal = () => {
     }
   };
 
+  // Handle profile update
+  const handleProfileUpdate = async (updatedProfile: Partial<Profile>) => {
+    if (!session?.user?.id) return;
+    
+    setAuthLoading(true);
+    setError('');
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updatedProfile)
+        .eq('id', session.user.id);
+      
+      if (error) {
+        setError(`Failed to update profile: ${error.message}`);
+      } else {
+        setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
+        setSuccess('Profile updated successfully!');
+      }
+    } catch (error) {
+      setError(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+    }
+    
+    setAuthLoading(false);
+  };
+
+  // Handle billing portal redirect
+  const handleBillingPortal = () => {
+    window.open('https://billing.stripe.com/p/login/7sY4gyaeu9EJcGDb8CfnO00', '_blank');
+  };
+
   const getStatusColor = (status: string) => {
     return status === 'online' ? 'status-online' : status === 'warning' ? 'status-warning' : 'status-offline';
   };
@@ -641,6 +677,17 @@ const NineLinePortal = () => {
             
             <div className="flex items-center space-x-6">
               <button
+                onClick={() => setShowProfile(!showProfile)}
+                className={`flex items-center space-x-2 px-4 py-2 text-sm rounded transition-colors ${
+                  showProfile 
+                    ? 'bg-brand text-white hover:bg-gray-800' 
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <User size={16} />
+                <span>Profile</span>
+              </button>
+{/* <button
                 onClick={() => setShowMCPChat(!showMCPChat)}
                 className={`flex items-center space-x-2 px-4 py-2 text-sm rounded transition-colors ${
                   showMCPChat 
@@ -650,7 +697,7 @@ const NineLinePortal = () => {
               >
                 <MessageSquare size={16} />
                 <span>AI Chat</span>
-              </button>
+              </button> */}
               <div className="text-right">
                 <div className="text-sm font-medium text-gray-900">{profile?.name}</div>
                 <div className="text-xs text-gray-500">{profile?.company || profile?.email}</div>
@@ -667,8 +714,8 @@ const NineLinePortal = () => {
         </div>
       </header>
 
-      {/* MCP Chat Panel */}
-      {showMCPChat && profile && (
+{/* MCP Chat Panel */}
+      {/* {showMCPChat && profile && (
         <div className="fixed top-0 right-0 w-96 h-screen bg-white shadow-xl z-50 border-l">
           <MCPChat
             externalUserId={profile.id}
@@ -676,10 +723,10 @@ const NineLinePortal = () => {
             className="h-full"
           />
         </div>
-      )}
+      )} */}
 
       {/* Main Content */}
-      <main className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all duration-300 ${showMCPChat ? 'mr-96' : ''}`}>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
             <CheckCircle size={16} />
@@ -970,6 +1017,296 @@ const NineLinePortal = () => {
           )}
         </div>
       </main>
+
+      {/* Profile Modal */}
+      {showProfile && profile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-medium text-gray-900">Profile & Settings</h3>
+                <button
+                  onClick={() => {
+                    setShowProfile(false);
+                    setError('');
+                    setSuccess('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700 flex items-center gap-2">
+                  <AlertCircle size={16} />
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700 flex items-center gap-2">
+                  <CheckCircle size={16} />
+                  {success}
+                  <button onClick={() => setSuccess('')} className="ml-auto text-green-700 hover:text-green-900">
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+
+              {/* Profile Tabs */}
+              <div className="border-b border-gray-200 mb-6">
+                <nav className="-mb-px flex space-x-8">
+                  <button 
+                    onClick={() => setActiveProfileTab('profile')}
+                    className={`py-2 px-1 text-sm font-medium border-b-2 transition-colors ${
+                      activeProfileTab === 'profile' 
+                        ? 'border-brand text-brand' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <User size={16} />
+                      <span>Profile</span>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => setActiveProfileTab('billing')}
+                    className={`py-2 px-1 text-sm font-medium border-b-2 transition-colors ${
+                      activeProfileTab === 'billing' 
+                        ? 'border-brand text-brand' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <CreditCard size={16} />
+                      <span>Billing</span>
+                    </div>
+                  </button>
+                </nav>
+              </div>
+
+              {/* Profile Content */}
+              <div className="space-y-6">
+                {activeProfileTab === 'profile' && (
+                  <>
+                    {/* Profile Information */}
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Profile Information</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Full Name
+                          </label>
+                          <input
+                            type="text"
+                            value={profile.name}
+                            onChange={(e) => handleProfileUpdate({ name: e.target.value })}
+                            className="input w-full"
+                            disabled={authLoading}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Email
+                          </label>
+                          <input
+                            type="email"
+                            value={profile.email}
+                            className="input w-full bg-gray-50"
+                            disabled
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Company
+                          </label>
+                          <input
+                            type="text"
+                            value={profile.company || ''}
+                            onChange={(e) => handleProfileUpdate({ company: e.target.value || null })}
+                            className="input w-full"
+                            placeholder="Your company name"
+                            disabled={authLoading}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Account Settings */}
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Account Settings</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">Password</div>
+                            <div className="text-sm text-gray-600">Change your account password</div>
+                          </div>
+                          <button className="btn-secondary text-sm">
+                            Change Password
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">Notifications</div>
+                            <div className="text-sm text-gray-600">Manage email notifications</div>
+                          </div>
+                          <button className="btn-secondary text-sm">
+                            Configure
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Usage Statistics */}
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Usage Statistics</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="card p-4 text-center">
+                          <div className="text-2xl font-light text-brand">{websites.length}</div>
+                          <div className="text-sm text-gray-600">Monitored Sites</div>
+                          <div className="text-xs text-gray-500 mt-1">Limit: 10</div>
+                        </div>
+                        <div className="card p-4 text-center">
+                          <div className="text-2xl font-light text-brand">24/7</div>
+                          <div className="text-sm text-gray-600">Monitoring</div>
+                          <div className="text-xs text-gray-500 mt-1">Always active</div>
+                        </div>
+                        <div className="card p-4 text-center">
+                          <div className="text-2xl font-light text-brand">∞</div>
+                          <div className="text-sm text-gray-600">Checks/Month</div>
+                          <div className="text-xs text-gray-500 mt-1">Unlimited</div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {activeProfileTab === 'billing' && (
+                  <>
+                    {/* Billing Overview */}
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Subscription Overview</h4>
+                      <div className="card bg-gradient-subtle p-6">
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <div className="text-2xl font-light text-brand mb-2">
+                              {profile.subscription_plan || 'Professional Plan'}
+                            </div>
+                            <div className="flex items-center space-x-4">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                (profile.subscription_status || 'active') === 'active' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {(profile.subscription_status || 'Active').charAt(0).toUpperCase() + 
+                                 (profile.subscription_status || 'Active').slice(1)}
+                              </span>
+                              {profile.next_billing_date && (
+                                <span className="text-sm text-gray-600">
+                                  Next billing: {new Date(profile.next_billing_date).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-3xl font-light text-brand">$49</div>
+                            <div className="text-sm text-gray-600">per month</div>
+                          </div>
+                        </div>
+                        
+                        <button
+                          onClick={handleBillingPortal}
+                          className="btn-primary w-full flex items-center justify-center space-x-2"
+                        >
+                          <CreditCard size={16} />
+                          <span>Manage Billing in Stripe</span>
+                        </button>
+                        
+                        <p className="text-xs text-gray-500 mt-3 text-center">
+                          Securely manage your subscription, payment methods, and billing history
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Plan Features */}
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Plan Features</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="card p-4">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                              <CheckCircle className="text-green-600" size={16} />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">Website Monitoring</div>
+                              <div className="text-xs text-gray-600">Up to 10 websites</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="card p-4">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <Activity className="text-blue-600" size={16} />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">24/7 Monitoring</div>
+                              <div className="text-xs text-gray-600">Real-time alerts</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="card p-4">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                              <Shield className="text-purple-600" size={16} />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">Security Scans</div>
+                              <div className="text-xs text-gray-600">Automated vulnerability checks</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="card p-4">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                              <Zap className="text-orange-600" size={16} />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">Performance Analytics</div>
+                              <div className="text-xs text-gray-600">Core Web Vitals tracking</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Billing History Preview */}
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Recent Billing</h4>
+                      <div className="card p-4">
+                        <div className="text-sm text-gray-600 text-center py-4">
+                          View complete billing history and download invoices in the Stripe Customer Portal
+                        </div>
+                        <button
+                          onClick={handleBillingPortal}
+                          className="btn-secondary w-full text-sm"
+                        >
+                          View Billing History
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Website Modal */}
       {showAddWebsite && (
